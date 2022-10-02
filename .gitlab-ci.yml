@@ -1,0 +1,18 @@
+stages:
+  - build
+
+build_dev:
+  tags:
+    - develop
+  stage: build
+  script:
+    - cp "$environtent_vars_dev"  .env
+    - cp "$alembic_dev"  alembic.ini
+
+    - sudo docker-compose build
+    - sudo docker-compose run -w /var/project --entrypoint="alembic upgrade head" project
+    - sudo docker-compose up --build -d
+
+    - sudo docker-compose logs --tail 500
+  only:
+    - dev

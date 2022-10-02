@@ -1,0 +1,5 @@
+venv/
+.env
+alembic.ini
+files/
+.idea/

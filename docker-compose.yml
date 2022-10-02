@@ -1,0 +1,66 @@
+version: '3.7'
+services:
+  project: &main
+    restart: "no"
+    build:
+      context: .
+
+      args:
+        MAX_WORKERS: ${PROJECT1_MAX_WORKERS}
+
+
+    ports:
+      - ${PROJECT1_PORT}:8000
+
+    env_file:
+      - .env
+
+
+    volumes:
+      - ${PROJECT1_FILES_PATH_VOLUME}:/var/file_storage
+
+    environment:
+      - PROJECT1_FILES_DIR=/var/file_storage
+    networks:
+      - local_net
+
+
+  postgres:
+    restart: "on-failure"
+    image: "postgres:13-alpine"
+
+    environment:
+      - POSTGRES_USER=${PROJECT1_DB_USER}
+      - POSTGRES_PASSWORD=${PROJECT1_DB_PASSWORD}
+      - POSTGRES_DB=${PROJECT1_DB_NAME}
+
+    ports:
+      - ${PROJECT1_DB_PORT}:5432
+
+    volumes:
+      - ${PROJECT1_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
+
+    networks:
+      - local_net
+
+
+#  redis:
+#    restart: "on-failure"
+#    image: 'bitnami/redis:latest'
+#    environment:
+#      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+#      - REDIS_PASSWORD=${REDIS_PASSWORD}
+#      - REDIS_AOF_ENABLED=no
+#
+#    command: /opt/bitnami/scripts/redis/run.sh
+#
+#    ports:
+#      - ${REDIS_PORT}:6379
+#
+#    networks:
+#      - local_net
+
+
+
+networks:
+  local_net:
