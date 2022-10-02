@@ -9,7 +9,7 @@ from routes.middlewares import LimitUploadSize
 
 from utils.db_session import db_session_manager
 
-app = fastapi.FastAPI(title='tradediary')
+app = fastapi.FastAPI(title='async arch')
 app.add_middleware(LimitUploadSize, max_upload_size=config.max_file_size)
 apply_exception_handlers(app)
 
