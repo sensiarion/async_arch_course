@@ -24,7 +24,7 @@ class TaskOut(TaskBare):
 
 
 class TaskOutFull(TaskOut):
-    changes: StatusChangeBare
+    status_changes: list[StatusChangeBare]
 
 
 class TaskListOut(ListModel):

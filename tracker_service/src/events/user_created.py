@@ -1,6 +1,7 @@
 import logging
 
 import aiomisc.entrypoint
+import sqlalchemy
 
 from common.events.constants import Events, get_topic_name, Services
 from common.events.messages.base_schema import EventMessage
@@ -20,19 +21,23 @@ class UserCreatedConsumer(AbstractKafkaConsumer):
         assert message.event_name == Events.user_created.value, 'wrong message passed'
         data = message.payload['user']
         async with db_session_manager() as session:
-            user = await user_crud.create(
-                session,
-                UserOut(
-                    id=data['id'],
-                    login=data['login'],
-                    last_name=data['last_name'],
-                    first_name=data['first_name'],
-                    role_id=data['role_id'],
-                    role_name=data['role']['name'],
-                    email=data['email'],
+            try:
+                user = await user_crud.create(
+                    session,
+                    UserOut(
+                        id=data['id'],
+                        login=data['login'],
+                        last_name=data['last_name'],
+                        first_name=data['first_name'],
+                        role_id=data['role_id'],
+                        role_name=data['role']['name'],
+                        email=data['email'],
+                    )
                 )
-            )
-            self.logger.info(f'User {user.id} created')
+                self.logger.info(f'User {user.id} created')
+            except sqlalchemy.exc.IntegrityError:
+                self.logger.info(f"User {data['id']} duplicated. skipping")
+                await session.rollback()
 
 
 if __name__ == '__main__':

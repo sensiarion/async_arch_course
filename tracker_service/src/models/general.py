@@ -29,8 +29,8 @@ class Task(Base):
     name = Column(String(512))
     description = Column(Text)
     status_id = Column(Integer, ForeignKey('statuses.id'), nullable=False)
-    assign_price = Column(Integer, nullable=False)
-    complete_price = Column(Integer, nullable=False)
+    assign_price = Column(Integer, nullable=True)
+    complete_price = Column(Integer, nullable=True)
     assigned_by = Column(UUID, ForeignKey('users.id'), nullable=False)
 
     created_at = Column(DateTime, default=now(), nullable=False)

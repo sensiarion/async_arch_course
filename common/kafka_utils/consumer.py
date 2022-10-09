@@ -100,7 +100,7 @@ class AbstractKafkaConsumer(aiomisc.Service):
         try:
             async for msg in self.consumer:
                 await self._consume(msg)
-                await self.consumer.commit()
+
 
         finally:
             self.logger.info('stopping')
@@ -125,6 +125,7 @@ class AbstractKafkaConsumer(aiomisc.Service):
         try:
             record = self.InputModel(**msg.value)
             await self.process(record)
+            await self.consumer.commit()
         except pydantic.ValidationError:
             self.logger.error(f'unable to parse kafka message', extra=err_extra_info)
             await asyncio.sleep(self.on_error_wait)
