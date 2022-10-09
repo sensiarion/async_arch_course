@@ -25,7 +25,7 @@ services:
       - local_net
 
 
-  postgres:
+  postgres_auth:
     restart: "on-failure"
     image: "postgres:13-alpine"
 
@@ -39,6 +39,25 @@ services:
 
     volumes:
       - ${AUTH_SERVICE_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
+
+    networks:
+      - local_net
+
+  # я слишком ленив чтобы разносить базы в 1 инстансе
+  postgres_tracker:
+    restart: "on-failure"
+    image: "postgres:13-alpine"
+
+    environment:
+      - POSTGRES_USER=${TRACKER_SERVICE_DB_USER}
+      - POSTGRES_PASSWORD=${TRACKER_SERVICE_DB_PASSWORD}
+      - POSTGRES_DB=${TRACKER_SERVICE_DB_NAME}
+
+    ports:
+      - ${TRACKER_SERVICE_DB_PORT}:5432
+
+    volumes:
+      - ${TRACKER_SERVICE_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
 
     networks:
       - local_net
