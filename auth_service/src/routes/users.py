@@ -2,9 +2,14 @@ import fastapi
 
 from core.constants import ROLES
 from core.crud.exceptions import LogicException
+from core.crud.retrieve import retrieve_object
 from dependecies import db_session
 from dependecies.auth import user_info
+from common.events.constants import Events
+from internals.events import create_event
 from internals.users import user_crud
+from models import Role
+from schemas.roles import RoleBare
 from schemas.users import UserListOut, UserOut, UserUpdateIn
 
 user_router = fastapi.APIRouter(tags=['users'])
@@ -54,7 +59,7 @@ async def change_role(
         id: str = fastapi.Path(...),
         new_role_id: int = fastapi.Body(..., alias='newRoleId'),
         session=db_session,
-        author=user_info
+        author=user_info,
 ) -> UserOut:
     if author.role_id != ROLES.ADMIN.value:
         raise LogicException("Недостаточно прав")
@@ -64,12 +69,20 @@ async def change_role(
     except ValueError:
         raise LogicException("Указанная роль не существует")
 
-
-
     user = await user_crud.get(session, id)
-
+    old_role = await retrieve_object(session, Role, user.role_id)
+    new_role = await retrieve_object(session, Role, new_role_id)
     user.role_id = new_role_id
 
+    create_event(
+        session, Events.role_changed, {
+            'user': UserOut.from_orm(user).dict(),
+            'old_role': RoleBare.from_orm(old_role).dict(),
+            'new_role': RoleBare.from_orm(new_role).dict()
+        }
+    )
+
+    await session.flush()
     return await UserOut.from_orm_async(session, user)
 
 

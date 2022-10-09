@@ -15,7 +15,6 @@ class UserUpdateIn(Model):
     email: Optional[pydantic.EmailStr]
     last_name: Optional[str] = pydantic.Field(min_length=1, max_length=256)
     first_name: Optional[str] = pydantic.Field(min_length=1, max_length=256)
-    role_id: Optional[int] = pydantic.Field(ROLES.USER.value, example=3)
 
     @pydantic.validator('login')
     def validate_login(cls, v):
