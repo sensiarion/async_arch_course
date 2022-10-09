@@ -1,4 +1,4 @@
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 
 from utils.orm_utils.softdelete import SoftDeleteMixin
@@ -29,3 +29,12 @@ class User(Base, SoftDeleteMixin):
     last_name = Column(String(256))
 
     role = relationship('Role')
+
+
+class Event(Base):
+    __tablename__ = 'stream_events'
+    id = Column(UUID, primary_key=True, server_default=text("uuid_generate_v4()"))
+    name = Column(Text)
+    payload = Column(JSONB)
+    timestamp = Column(DateTime, default=now)
+    sent_at = Column(DateTime)

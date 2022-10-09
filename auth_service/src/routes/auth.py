@@ -4,6 +4,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.crud.exceptions import LogicException
 from dependecies import db_session
+from common.events.constants import Events
+from internals.events import create_event
 from internals.users import user_crud
 from models import User
 from schemas.users import UserOut, RegisterUserIn, UserLoginOut
@@ -31,6 +33,11 @@ async def register(
 
     user = await user_crud.create(session, register_info)
 
+    create_event(
+        session, Events.user_created, {
+            'user': (await UserOut.from_orm_async(session, user)).dict(),
+        }
+    )
     return await UserOut.from_orm_async(session, user)
 
 
