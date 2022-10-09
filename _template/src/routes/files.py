@@ -8,7 +8,7 @@ from starlette.background import BackgroundTask, BackgroundTasks
 from core.config import config
 from core.crud.exceptions import ObjectNotExists
 from dependecies import db_session
-from dependecies.user import user_info
+from dependecies.auth import user_info
 from internals.files import file_crud, FileHandler
 from schemas.files import FileOut, FileCreate, FileList
 from utils.time_utils import now

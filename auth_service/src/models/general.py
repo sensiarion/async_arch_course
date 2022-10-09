@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
 
 from utils.orm_utils.softdelete import SoftDeleteMixin
 from sqlalchemy import Column, Integer, text, Float, Text, String, DateTime, ForeignKey, Boolean
@@ -9,12 +10,22 @@ from utils.time_utils import now
 MAX_FILENAME_LENGTH = 512
 
 
-class File(Base, SoftDeleteMixin):
-    __tablename__ = 'files'
+class Role(Base):
+    __tablename__ = 'roles'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(256))
+
+
+class User(Base, SoftDeleteMixin):
+    __tablename__ = 'users'
 
     id = Column(UUID, primary_key=True, server_default=text("uuid_generate_v4()"))
-    name = Column(String(MAX_FILENAME_LENGTH))
-    path = Column(Text)
-    is_public = Column(Boolean, server_default='false', nullable=False)
-    created_by = Column(Integer)
-    created_at = Column(DateTime, default=now)
+    login = Column(String(64))
+    password = Column(Text)
+    email = Column(String(256))
+    role_id = Column(Integer, ForeignKey('roles.id'))
+    first_name = Column(String(256))
+    last_name = Column(String(256))
+
+    role = relationship('Role')

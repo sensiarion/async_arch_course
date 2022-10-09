@@ -3,11 +3,10 @@ import uvicorn
 from starlette.middleware.cors import CORSMiddleware
 
 from core.config import config
+from routes.auth import auth_router
 from routes.exceptions import apply_exception_handlers
-from routes.files import file_router
 from routes.middlewares import LimitUploadSize
-
-from utils.db_session import db_session_manager
+from routes.users import user_router
 
 app = fastapi.FastAPI(title='async arch')
 app.add_middleware(LimitUploadSize, max_upload_size=config.max_file_size)
@@ -22,7 +21,8 @@ if not config.cors_policy_enabled:
         expose_headers=["Content-Disposition"],
         allow_credentials=True,
     )
-app.include_router(file_router, prefix='/files')
+app.include_router(auth_router, prefix='/auth')
+app.include_router(user_router, prefix='/users')
 
 
 @app.on_event('startup')

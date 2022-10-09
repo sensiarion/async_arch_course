@@ -29,7 +29,10 @@ class DBConfig(BaseSettings):
         return f'postgresql+asyncpg://{db_user}:{parse.quote(db_password)}@{db_host}:{db_port}/{db_name}'
 
 
-class Config(DBConfig):
+class Config(DBConfig, BaseSettings):
+    test_token: str = None
+    token_alive_hours: int = 24 * 7
+    secret: str = 'pepathebestpig'
     host: str = '127.0.0.1'
     port: int
 
