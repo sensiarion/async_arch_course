@@ -4,14 +4,10 @@ from typing import Any, Iterable
 import aiomisc.service.periodic
 from sqlalchemy import select
 
-from dependecies import db_session
 from common.events.constants import Services, Events
-
 from common.events.messages.base_schema import EventMessage
-
+from common.kafka_utils.producer import EventKafkaProducer
 from events import event_producer
-from kafka_utils.consumer import AbstractKafkaConsumer
-from kafka_utils.producer import EventKafkaProducer
 from models import Event
 from utils.db_session import db_session_manager
 from utils.time_utils import now
@@ -45,7 +41,6 @@ class BatchEventStreamer(aiomisc.service.periodic.PeriodicService):
                 )
                 self.logger.info(f'event: {event.id} sent')
                 event.sent_at = now()
-
 
 
 if __name__ == '__main__':
