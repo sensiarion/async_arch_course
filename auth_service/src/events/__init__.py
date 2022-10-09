@@ -1,6 +1,6 @@
-from kafka_utils.config import kafka_base_config
-from kafka_utils.producer import EventKafkaProducer
-from kafka_utils.shared import KafkaConfig
+from common.kafka_utils.config import kafka_base_config
+from common.kafka_utils.producer import EventKafkaProducer
+from common.kafka_utils.shared import KafkaConfig
 
 connection_config = KafkaConfig(
     input_topic=None,
