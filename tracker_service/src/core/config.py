@@ -2,7 +2,6 @@ import pathlib
 from urllib import parse
 
 import pydantic
-
 from pydantic import BaseSettings
 
 project_dir_name = (pathlib.Path(__file__).parent.parent.parent).name
@@ -33,6 +32,7 @@ class Config(DBConfig):
     host: str = '127.0.0.1'
     port: int
 
+    auth_service_token_validate_url: str
     max_file_size: int = 50_000_000  # ~50mb with default
     file_path: pathlib.Path = pathlib.Path('../files')
 

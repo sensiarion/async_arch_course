@@ -1,7 +1,7 @@
-from abc import abstractmethod
-from typing import Optional, TypeVar, Type, Any
 import asyncio
 import logging
+from abc import abstractmethod
+from typing import Optional, TypeVar, Type
 
 import aiomisc
 import orjson
@@ -58,11 +58,12 @@ class AbstractKafkaConsumer(aiomisc.Service):
     def _create_consumer(self) -> AIOKafkaConsumer:
         return AIOKafkaConsumer(
             self.kafka_config.input_topic,
-            loop=self.loop, bootstrap_servers=self.kafka_config.bootstrap_servers,
+            loop=self.loop,
+            bootstrap_servers=self.kafka_config.bootstrap_servers,
             group_id=self.kafka_config.group_id,
             value_deserializer=orjson.loads,
             auto_offset_reset="earliest" if self.from_topic_begin else 'latest',
-            auto_commit_interval_ms=1000
+            enable_auto_commit=False
         )
 
     @abstractmethod
@@ -99,6 +100,8 @@ class AbstractKafkaConsumer(aiomisc.Service):
         try:
             async for msg in self.consumer:
                 await self._consume(msg)
+
+
         finally:
             self.logger.info('stopping')
             await self.consumer.stop()
@@ -122,6 +125,7 @@ class AbstractKafkaConsumer(aiomisc.Service):
         try:
             record = self.InputModel(**msg.value)
             await self.process(record)
+            await self.consumer.commit()
         except pydantic.ValidationError:
             self.logger.error(f'unable to parse kafka message', extra=err_extra_info)
             await asyncio.sleep(self.on_error_wait)
