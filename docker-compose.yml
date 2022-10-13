@@ -1,66 +1,97 @@
 version: '3.7'
 services:
-  project: &main
+  auth_service: &main
     restart: "no"
     build:
       context: .
 
       args:
-        MAX_WORKERS: ${PROJECT1_MAX_WORKERS}
+        MAX_WORKERS: ${AUTH_SERVICE_MAX_WORKERS}
 
 
     ports:
-      - ${PROJECT1_PORT}:8000
+      - ${AUTH_SERVICE_PORT}:8000
 
     env_file:
       - .env
 
 
     volumes:
-      - ${PROJECT1_FILES_PATH_VOLUME}:/var/file_storage
+      - ${AUTH_SERVICE_FILES_PATH_VOLUME}:/var/file_storage
 
     environment:
-      - PROJECT1_FILES_DIR=/var/file_storage
+      - AUTH_SERVICE_FILES_DIR=/var/file_storage
     networks:
       - local_net
 
 
-  postgres:
+  postgres_auth:
     restart: "on-failure"
     image: "postgres:13-alpine"
 
     environment:
-      - POSTGRES_USER=${PROJECT1_DB_USER}
-      - POSTGRES_PASSWORD=${PROJECT1_DB_PASSWORD}
-      - POSTGRES_DB=${PROJECT1_DB_NAME}
+      - POSTGRES_USER=${AUTH_SERVICE_DB_USER}
+      - POSTGRES_PASSWORD=${AUTH_SERVICE_DB_PASSWORD}
+      - POSTGRES_DB=${AUTH_SERVICE_DB_NAME}
 
     ports:
-      - ${PROJECT1_DB_PORT}:5432
+      - ${AUTH_SERVICE_DB_PORT}:5432
 
     volumes:
-      - ${PROJECT1_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
+      - ${AUTH_SERVICE_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
 
     networks:
       - local_net
 
+  # я слишком ленив чтобы разносить базы в 1 инстансе
+  postgres_tracker:
+    restart: "on-failure"
+    image: "postgres:13-alpine"
 
-#  redis:
-#    restart: "on-failure"
-#    image: 'bitnami/redis:latest'
-#    environment:
-#      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
-#      - REDIS_PASSWORD=${REDIS_PASSWORD}
-#      - REDIS_AOF_ENABLED=no
-#
-#    command: /opt/bitnami/scripts/redis/run.sh
-#
-#    ports:
-#      - ${REDIS_PORT}:6379
-#
-#    networks:
-#      - local_net
+    environment:
+      - POSTGRES_USER=${TRACKER_SERVICE_DB_USER}
+      - POSTGRES_PASSWORD=${TRACKER_SERVICE_DB_PASSWORD}
+      - POSTGRES_DB=${TRACKER_SERVICE_DB_NAME}
 
+    ports:
+      - ${TRACKER_SERVICE_DB_PORT}:5432
 
+    volumes:
+      - ${TRACKER_SERVICE_POSTGRES_DATA_VOLUME}:/var/lib/postgresql/data
+
+    networks:
+      - local_net
+
+  zookeeper:
+    image: 'bitnami/zookeeper:latest'
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka:
+    image: 'bitnami/kafka:latest'
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_BROKER_ID=1
+#      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+#      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper
+    volumes:
+      - ${KAFKA_VOLUME}:/bitnami
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    ports:
+      - "9192:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
 
 networks:
   local_net:
